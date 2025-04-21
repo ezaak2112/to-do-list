@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kalender Cute</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #eaf4ff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .navbar {
+      background-color: #0d6efd;
+    }
+    .navbar-brand, .nav-link {
+      color: white !important;
+    }
+    .calendar-container {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      max-width: 600px;
+      margin: 30px auto;
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .calendar-header h2 {
+      font-size: 1.5rem;
+      color: #0d6efd;
+    }
+    .calendar-days, .calendar-dates {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .calendar-days div {
+      font-weight: 600;
+      text-align: center;
+      color: #6c757d;
+    }
+    .calendar-dates div {
+      height: 60px;
+      background-color: #f0f8ff;
+      border-radius: 12px;
+      text-align: center;
+      line-height: 60px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.2s;
+    }
+    .calendar-dates div:hover {
+      background-color: #cfe7ff;
+    }
+    .calendar-dates .selected {
+      background-color: #0d6efd;
+      color: white;
+      font-weight: bold;
+    }
+    .info-box {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 1rem;
+      color: #0d6efd;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+
+ <!-- Navbar -->
+ <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">To-Do App</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" href="tes.html">Daftar Tugas</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="ctt.html">Catatan Harian</a>
+          </li>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="kalender.html">Kalender</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="pengaturan.html">Pengaturan</a>
+        </li>
+        </ul>
+        <div class="d-flex align-items-center">
+          <span id="usernameDisplay" class="text-white me-3">Hi, NamaUser</span>
+          <a href="#" id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+<div class="calendar-container">
+  <div class="calendar-header">
+    <button class="btn btn-outline-primary btn-sm" onclick="prevMonth()">&lt;</button>
+    <h2 id="calendar-title">April 2025</h2>
+    <button class="btn btn-outline-primary btn-sm" onclick="nextMonth()">&gt;</button>
+  </div>
+  <div class="calendar-days">
+    <div>Min</div>
+    <div>Sen</div>
+    <div>Sel</div>
+    <div>Rab</div>
+    <div>Kam</div>
+    <div>Jum</div>
+    <div>Sab</div>
+  </div>
+  <div class="calendar-dates" id="calendar-dates">
+    <!-- Tanggal akan dimuat via JavaScript -->
+  </div>
+  <div class="info-box" id="info-box">Klik tanggal untuk melihat detail.</div>
+</div>
+
+<script>
+  const calendarTitle = document.getElementById('calendar-title');
+  const calendarDates = document.getElementById('calendar-dates');
+  const infoBox = document.getElementById('info-box');
+  let currentDate = new Date();
+
+  const tasks = {
+    '2025-04-17': ['Kerjakan Tugas PWEB', 'Upload ke Railway'],
+    '2025-04-20': ['Bikin laporan praktikum', 'Belajar untuk quiz'],
+  };
+
+  function renderCalendar(date) {
+    calendarDates.innerHTML = '';
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDay = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+
+    const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    calendarTitle.textContent = `${monthNames[month]} ${year}`;
+
+    for (let i = 0; i < startDay; i++) {
+      const empty = document.createElement('div');
+      calendarDates.appendChild(empty);
+    }
+
+    for (let day = 1; day <= totalDays; day++) {
+      const cell = document.createElement('div');
+      cell.textContent = day;
+      cell.addEventListener('click', async () => {
+  document.querySelectorAll('.calendar-dates div').forEach(d => d.classList.remove('selected'));
+  cell.classList.add('selected');
+
+  const selectedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+  const todayTasks = await fetchTasksByDate(selectedDate);
+
+  if (todayTasks.length > 0) {
+    infoBox.innerHTML = `
+      <div><strong>${day} ${monthNames[month]} ${year}</strong></div>
+      <ul class="list-unstyled mt-2">
+        ${todayTasks.map(task => `<li>📌 ${task.title}</li>`).join('')}
+      </ul>
+    `;
+  } else {
+    infoBox.textContent = `Tidak ada tugas untuk tanggal ${day} ${monthNames[month]} ${year}`;
+  }
+});
+      calendarDates.appendChild(cell);
+    }
+  }
+
+  function prevMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar(currentDate);
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar(currentDate);
+  }
+
+  renderCalendar(currentDate);
+
+  async function fetchTasksByDate(date) {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    infoBox.textContent = "Anda belum login.";
+    return [];
+  }
+
+  try {
+    const res = await fetch(`http://localhost:8080/api/tasks/date/${date}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error("Gagal mengambil tugas");
+    }
+
+    const tasks = await res.json();
+    return tasks;
+  } catch (error) {
+    console.error("Error:", error);
+    infoBox.textContent = "Gagal memuat tugas.";
+    return [];
+  }
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const username = localStorage.getItem("username");
+      if (username) {
+        document.getElementById("usernameDisplay").textContent = "Hi, " + username ;
+      }
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- SCRIPT LOGOUT -->
+  <script>
+    document.getElementById("logoutBtn").addEventListener("click", function (e) {
+      e.preventDefault();
+  
+      Swal.fire({
+        title: "Yakin ingin keluar?",
+        text: "Kamu akan keluar dari sesi ini.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#007bff",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Ya, keluar",
+        cancelButtonText: "Batal",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("username");
+  
+          Swal.fire({
+            icon: "success",
+            title: "Berhasil keluar!",
+            showConfirmButton: false,
+            timer: 1000
+          });
+  
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 1000);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>To-Do List Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .task-card {
+      border-left: 5px solid #0d6efd;
+    }
+    .task-completed {
+      text-decoration: line-through;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Just Do It</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link active" href="tes.html">Daftar Tugas</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="ctt.html">Catatan Harian</a>
+          </li>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="kalender.html">Kalender</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="pengaturan.html">Pengaturan</a>
+        </li>
+        </ul>
+        <div class="d-flex align-items-center">
+          <span id="usernameDisplay" class="text-white me-3">Hi, NamaUser</span>
+          <a href="#" id="logoutBtn" class="btn btn-outline-light btn-sm">Logout</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mt-4">
+
+    <!-- Filter Form -->
+    <div class="filter-container d-flex flex-wrap gap-3 align-items-end mb-4">
+      <div class="form-group">
+        <label>Judul</label>
+        <input type="text" class="form-control" id="filterTitle" placeholder="Cari judul tugas...">
+      </div>
+      <div class="form-group">
+        <label>Tanggal</label>
+        <input type="date" class="form-control" id="filterDate">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select class="form-control" id="filterStatus">
+          <option value="">-- Semua Status --</option>
+          <option value="Belum Selesai">Belum Selesai</option>
+          <option value="Selesai">Selesai</option>
+        </select>
+      </div>
+      <div class="form-group flex-grow-1">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary w-100" onclick="filterTasks()"><i class="fas fa-search"></i> Cari</button>
+      </div>
+    </div>
+
+    <!-- Header & Add Button -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>📋 Daftar Tugas</h4>
+      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTask">
+        <i class="fas fa-plus me-2"></i>Tambah Tugas
+      </button>
+    </div>
+
+    <!-- Task List -->
+    <div class="row g-3" id="taskList">
+    </div>
+  </div>
+
+  <!-- Modal Form -->
+  <div class="modal fade" id="modalTask" tabindex="-1" aria-labelledby="modalTaskLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="taskForm" onsubmit="submitEditTask(event)">
+
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="modalTaskLabel">Tambah / Edit Tugas</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+               <!-- Hidden Input for Task ID -->
+          <input type="hidden" id="taskId">
+
+            <div class="mb-3">
+              <label for="judulTugas" class="form-label">Judul Tugas</label>
+              <input type="text" class="form-control" id="judulTugas" required>
+            </div>
+            <div class="mb-3">
+              <label for="deskripsiTugas" class="form-label">Deskripsi</label>
+              <textarea class="form-control" id="deskripsiTugas" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="deadlineTugas" class="form-label">Deadline</label>
+              <input type="date" class="form-control" id="deadlineTugas" required>
+            </div>
+            <div class="mb-3">
+              <label for="statusTugas" class="form-label">Status</label>
+              <select class="form-select" id="statusTugas">
+                <option value="Belum Selesai" selected>Belum Selesai</option>
+                <option value="Selesai">Selesai</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-success">Simpan</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task List -->
+<div class="row g-3" id="taskList">
+</div>
+
+<script>
+  const token = localStorage.getItem('token'); // untuk mastiin token sudah disimpan saat login
+const taskList = document.getElementById("taskList");
+let editId = null; // Buat penanda apakah ini edit atau tambah
+
+// Fetch dan tampilkan semua tugas
+async function fetchTasks() {
+  const token = localStorage.getItem('token');
+  const title = document.getElementById("filterTitle").value;
+  const date = document.getElementById("filterDate").value;
+  const status = document.getElementById("filterStatus").value;
+
+  const query = new URLSearchParams();
+  if (title) query.append("title", title);
+  if (date) query.append("deadline", date);
+  if (status) query.append("status", status);
+
+  try {
+    const response = await fetch(`http://localhost:8080/api/tasks?${query.toString()}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    console.log("HTTP Status:", response.status);
+
+    if (!response.ok) {
+      const errorResponse = await response.text();
+      console.error("Respon error:", errorResponse);
+      throw new Error(errorResponse || "Gagal mengambil tugas");
+    }
+
+    const rawResponse = await response.text();
+    console.log("Raw Response:", rawResponse);
+
+    // untuk mengubah raw response menjadi JSON
+    const result = JSON.parse(rawResponse || "[]");
+    console.log("Isi tasks (result):", result);
+
+    // Cek apakah data valid dan merupakan array
+    if (!Array.isArray(result)) {
+      throw new Error("Format data tugas tidak sesuai atau kosong");
+    }
+
+    if (result.length === 0) {
+      console.log("Tidak ada tugas ditemukan.");
+      taskList.innerHTML = "<p>Tidak ada tugas ditemukan.</p>";
+      return;
+    }
+
+    taskList.innerHTML = "";
+
+    result.forEach(task => {
+      console.log("Tugas:", task);  // Periksa setiap tugas
+      const card = document.createElement("div");
+      card.className = "col-md-6";
+
+      card.innerHTML = `
+        <div class="card task-card p-3">
+          <h5 class="${task.status === 'Selesai' ? 'task-completed' : ''}">${task.title}</h5>
+          <p>${task.description}</p>
+          <small>Deadline: ${new Date(task.deadline).toLocaleDateString()}</small>
+          <div class="mt-2">
+            <span class="badge bg-${task.status === 'Selesai' ? 'success' : 'warning'}">${task.status}</span>
+            <button class="btn btn-sm btn-primary ms-2" onclick="editTask(${task.id})"><i class="fas fa-edit"></i></button>
+            <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </div>
+      `;
+      taskList.appendChild(card);
+    });
+  } catch (error) {
+    console.error("Gagal fetch tugas:", error);
+    Swal.fire({
+      icon: "error",
+      title: "Gagal mengambil data tugas!",
+      text: error.message
+    });
+  }
+}
+
+  let originalTask = {};
+
+  // Menangani submit form untuk tambah/edit tugas
+  const taskForm = document.getElementById("taskForm");
+  taskForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const title = document.getElementById("judulTugas").value;
+    const description = document.getElementById("deskripsiTugas").value;
+    const deadline = document.getElementById("deadlineTugas").value;
+    const status = document.getElementById("statusTugas").value;
+
+    const taskData = { title, description, deadline, status };
+
+    // Cek perubahan jika mode edit
+    if (editId !== null) {
+      const isSame =
+        taskData.title === originalTask.title &&
+        taskData.description === originalTask.description &&
+        taskData.deadline === originalTask.deadline &&
+        taskData.status === originalTask.status;
+
+      if (isSame) {
+        Swal.fire({
+          icon: "info",
+          title: "Tidak ada perubahan",
+          text: "Silakan ubah data sebelum menyimpan.",
+          confirmButtonColor: "#7b5aff"
+        });
+        return;
+      }
+    }
+
+    try {
+      let url = "http://localhost:8080/api/tasks";
+      let method = "POST";
+
+      if (editId !== null) { // Edit mode
+        url += `/${editId}`;
+        method = "PUT";
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(taskData)
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        Swal.fire({
+          icon: "error",
+          title: "Gagal menyimpan tugas!",
+          text: err
+        });
+        return;
+      }
+
+      // Reset dan refresh
+      taskForm.reset();
+      editId = null;
+      originalTask = {};
+
+      const modal = bootstrap.Modal.getInstance(document.getElementById('modalTask'));
+      modal.hide();
+
+      fetchTasks();
+
+      Swal.fire({
+        icon: "success",
+        title: "Tugas berhasil disimpan!",
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error("Gagal kirim tugas:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Terjadi kesalahan",
+        text: "Tidak dapat menyimpan tugas. Silakan coba lagi."
+      });
+    }
+  });
+
+  // Fungsi untuk edit tugas
+  function editTask(id) {
+    fetch(`http://localhost:8080/api/tasks/${id}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    })
+    .then(res => res.json())
+    .then(task => {
+      document.getElementById("judulTugas").value = task.title || "";
+      document.getElementById("deskripsiTugas").value = task.description || "";
+      document.getElementById("deadlineTugas").value = task.deadline?.split("T")[0] || "";
+      document.getElementById("statusTugas").value = task.status || "Belum Selesai";
+      editId = task.id;
+
+      // Simpan data awal (untuk deteksi perubahan)
+      originalTask = {
+        title: task.title || "",
+        description: task.description || "",
+        deadline: task.deadline?.split("T")[0] || "",
+        status: task.status || "Belum Selesai"
+      };
+
+      const modal = new bootstrap.Modal(document.getElementById('modalTask'));
+      modal.show();
+    })
+    .catch(err => {
+      console.error(err);
+      Swal.fire({
+        icon: "error",
+        title: "Gagal mengambil data tugas!",
+        text: err.message
+      });
+    });
+  }
+
+  // Panggil fetchTasks saat halaman dimuat
+  window.onload = fetchTasks;
+</script>
+
+<script>
+  async function deleteTask(taskId) {
+  Swal.fire({
+    title: "Yakin ingin menghapus tugas ini?",
+    text: "Tugas yang dihapus tidak bisa dikembalikan.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#007bff",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "Ya, hapus",
+    cancelButtonText: "Batal",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/tasks/${taskId}`, {
+          method: 'DELETE',
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          Swal.fire({
+            icon: "success",
+            title: "Tugas berhasil dihapus!",
+            showConfirmButton: false,
+            timer: 1000
+          });
+
+          // Update tampilan setelah penghapusan
+          fetchTasks();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Gagal menghapus tugas",
+            text: "Terjadi kesalahan saat menghapus tugas.",
+            showConfirmButton: true
+          });
+        }
+      } catch (error) {
+        Swal.fire({
+          icon: "error",
+          title: "Terjadi kesalahan",
+          text: "Tidak dapat menghapus tugas. Silakan coba lagi.",
+          showConfirmButton: true
+        });
+      }
+    }
+  });
+}
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const username = localStorage.getItem("username");
+      if (username) {
+        document.getElementById("usernameDisplay").textContent = "Hi, " + username ;
+      }
+    });
+  </script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- SCRIPT LOGOUT -->
+<script>
+  document.getElementById("logoutBtn").addEventListener("click", function (e) {
+    e.preventDefault();
+
+    Swal.fire({
+      title: "Yakin ingin keluar?",
+      text: "Kamu akan keluar dari sesi ini.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#007bff",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, keluar",
+      cancelButtonText: "Batal",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("username");
+
+        Swal.fire({
+          icon: "success",
+          title: "Berhasil keluar!",
+          showConfirmButton: false,
+          timer: 1000
+        });
+
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 1000);
+      }
+    });
+  });
+</script>
+  <!--script filtering-->
+  <script>
+    // Ambil form filter dan elemen lainnya
+    const filterTitle = document.getElementById("filterTitle");
+    const filterDate = document.getElementById("filterDate");
+    const filterStatus = document.getElementById("filterStatus");
+  
+    // Fungsi untuk memfilter tugas berdasarkan input
+    async function filterTasks() {
+      const title = filterTitle.value.trim();
+      const date = filterDate.value;
+      const status = filterStatus.value;
+  
+      let queryParams = [];
+  
+      // Cek apakah judul ada dan tambahkan ke query
+      if (title) {
+        queryParams.push(`title_like=${encodeURIComponent(title)}`);
+      }
+  
+      // Cek apakah tanggal ada dan tambahkan ke query
+      if (date) {
+        queryParams.push(`deadline=${encodeURIComponent(date)}`);
+      }
+  
+      // Cek apakah status ada dan tambahkan ke query
+      if (status) {
+        queryParams.push(`status=${encodeURIComponent(status)}`);
+      }
+  
+      // Bangun URL query
+      let url = "http://localhost:8080/api/tasks";
+      if (queryParams.length > 0) {
+        url += "?" + queryParams.join("&");
+      }
+  
+      try {
+        const response = await fetch(url, {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+  
+        const tasks = await response.json();
+        taskList.innerHTML = ""; // Kosongkan daftar tugas sebelum menampilkan yang baru
+  
+        tasks.forEach(task => {
+          const card = document.createElement("div");
+          card.className = "col-md-6";
+  
+          card.innerHTML = `
+            <div class="card task-card p-3">
+              <h5 class="${task.status === 'Selesai' ? 'task-completed' : ''}">${task.title}</h5>
+              <p>${task.description}</p>
+              <small>Deadline: ${new Date(task.deadline).toLocaleDateString()}</small>
+              <div class="mt-2">
+                <span class="badge bg-${task.status === 'Selesai' ? 'success' : 'warning'}">${task.status}</span>
+                <button class="btn btn-sm btn-primary ms-2" onclick="editTask(${task.id})"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-sm btn-danger" onclick="deleteTask(${task.id})"><i class="fas fa-trash-alt"></i></button>
+              </div>
+            </div>
+          `;
+          taskList.appendChild(card);
+        });
+      } catch (error) {
+        console.error("Gagal fetch tugas:", error);
+        Swal.fire({
+          icon: "error",
+          title: "Gagal mengambil data tugas!",
+          text: error.message
+        });
+      }
+    }
+  
+    // Panggil filterTasks saat form disubmit
+    document.querySelector(".filter-container button").addEventListener("click", (e) => {
+      e.preventDefault(); // Menghindari reload halaman
+      filterTasks();
+    });
+
+  </script>
+  
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>To-Do List App</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+        background: linear-gradient(to bottom right, #007cf0, #00dfd8);
+        min-height: 100vh;
+      color: #fff;
+      transition: opacity 0.5s ease;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 20px 40px;
+    }
+
+    .btn-login {
+      background-color: white;
+      color: #0072ff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.1s;
+    }
+
+    .btn-login:hover {
+      background-color: #f0f0f0;
+    }
+
+    .landing-content {
+      text-align: center;
+      margin-top: 80px;
+      animation: fadeIn 1s ease;
+    }
+
+    .landing-content img {
+      width: 500px;
+      margin-bottom: 30px;
+    }
+
+    .landing-content h1 {
+      font-size: 1.3rem; 
+      margin-bottom: 15px;
+    }
+
+    .landing-content p {
+      font-size: 1rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <a href="#" class="btn-login" onclick="goToLogin(event)">Login</a>
+  </header>
+
+  <main class="landing-content">
+    <img src="logo.png" alt="Logo App">
+    <h1>Selamat Datang di Aplikasi To-Do List</h1>
+    <p>Kelola tugasmu dengan mudah dan efisien!</p>
+  </main>
+
+  <script>
+    function goToLogin(e) {
+      e.preventDefault();
+      document.body.style.opacity = 0;
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 500);
+    }
+  </script>
+</body>
+</html>

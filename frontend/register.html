@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register - To-Do App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(120deg, #007bff, #20c997);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .register-box {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 400px;
+      animation: fadeIn 1s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .register-box h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #333;
+    }
+
+    .register-box .form-group {
+      margin-bottom: 20px;
+    }
+
+    .register-box label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .register-box input {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .register-box input:focus {
+      border-color: #20c997;
+    }
+
+    .register-box button {
+      width: 100%;
+      padding: 12px;
+      background: #20c997;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .register-box button:hover {
+      background: #17a085;
+    }
+
+    .footer-text {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 0.9rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="register-box">
+    <h2>Buat Akun</h2>
+    <form id="registerForm">
+    <form method="POST" action="register.php">
+      <div class="form-group">
+        <label for="name">Nama Lengkap</label>
+        <input type="text" id="name" name="name" required />
+      </div>
+
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="username" id="username" name="username" required />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Kata Sandi</label>
+        <input type="password" id="password" name="password" required />
+      </div>
+
+      <div class="form-group">
+        <label for="confirm_password">Konfirmasi Kata Sandi</label>
+        <input type="password" id="confirm_password" name="confirm_password" required />
+      </div>
+
+      <button type="submit">Daftar</button>
+    </form>
+    <p class="footer-text">Sudah punya akun? <a href="login.html">Login</a></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+  
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirm_password").value;
+  
+
+        // TAMPILKAN LOADING
+    Swal.fire({
+      title: 'Membuat Akun...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
+      if (password !== confirmPassword) {
+        Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'Password tidak cocok!',
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true
+      });
+        return;
+      }
+  
+      try {
+        const response = await fetch("http://localhost:8080/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            username: username,   
+            password: password
+          })
+        });
+  
+        const data = await response.json();
+  
+        if (response.ok) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Pendaftaran berhasil!',
+          showConfirmButton: false,
+          timer: 1000,
+          timerProgressBar: true
+        });
+
+        setTimeout(() => {
+          window.location.href = "login.html";
+        }, 900);
+      } else {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: data.message || 'Gagal mendaftar!',
+          showConfirmButton: false,
+          timer: 1000,
+          timerProgressBar: true
+        });
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'error',
+        title: 'Terjadi kesalahan!',
+        showConfirmButton: false,
+        timer: 1000,
+        timerProgressBar: true
+      });
+    }
+  });
+</script>
+  
+</body>
+</html>
