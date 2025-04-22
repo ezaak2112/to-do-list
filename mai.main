@@ -1,28 +1,16 @@
 package main
 
 import (
-	"log"
-	"os"
 	"todolist/todo-backend/database"
 	"todolist/todo-backend/handler"
 	"todolist/todo-backend/utils"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
-	// Load file .env
-	if err := godotenv.Load(); err != nil {
-		log.Println("Tidak menemukan file .env, menggunakan environment default")
-	}
-
-	// Koneksi ke database
-	db, err := database.Connect()
-	if err != nil {
-		log.Fatal("Gagal terhubung ke database:", err)
-	}
+	db := database.Connect()
 
 	e := echo.New()
 	e.Use(middleware.CORS())
@@ -60,10 +48,30 @@ func main() {
 	api.PUT("/tasks/:id", handler.UpdateTask(db))
 	api.DELETE("/tasks/:id", handler.DeleteTask(db))
 
-	// Gunakan port dari ENV, default ke 8080 jika tidak ada
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	e.Logger.Fatal(e.Start(":8080"))
+}
+
+
+package database
+
+import (
+	"database/sql"
+	"log"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+func Connect() *sql.DB {
+	dsn := "root:@tcp(127.0.0.1:3306)/todoapp?parseTime=true"
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatal("Gagal konek database:", err)
 	}
-	e.Logger.Fatal(e.Start(":" + port))
+
+	if err := db.Ping(); err != nil {
+		log.Fatal("Database tidak merespon:", err)
+	}
+
+	log.Println("Berhasil terhubung ke database!")
+	return db
 }
