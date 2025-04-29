@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: todolist-backend
+    runtime: go
+    buildCommand: cd todo-backend && go mod tidy
+    startCommand: cd todo-backend && go run ../main.go
+    envVars:
+      - key: ENV
+        value: dev
+      - key: PORT
+        value: 8080
+      - key: MYSQL_HOST
+        value: mainline.proxy.rlwy.net
+      - key: MYSQL_PORT
+        value: 20268
+      - key: MYSQL_USER
+        value: root
+      - key: MYSQL_PASSWORD
+        value: tdOZfLhSpQVixqmYKkXFEpqROjjSAvrE
+      - key: MYSQL_DATABASE
+        value: railway
+      - key: JWT_SECRET_KEY
+        value: your_secret_key
